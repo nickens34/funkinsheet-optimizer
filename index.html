@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FunkinSheet Resizer</title>
+    <!--  ... -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: #fff; padding: 20px; max-width: 600px; margin: 0 auto; background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('bg.jpg'); background-repeat: no-repeat; background-size: cover; background-attachment: fixed; min-height: 100vh; overflow: hidden;}
+
+        .box { border: 2px dashed #444; padding: 20px; border-radius: 8px; background: #1e1e1e; margin-bottom: 15px; }
+        label { display: block; margin-top: 12px; font-weight: bold; }
+        input[type="file"], input[type="number"], input[type="text"] { 
+            width: 100%; padding: 10px; margin-top: 5px; background: #2a2a2a; border: 1px solid #555; color: #fff; border-radius: 4px; box-sizing: border-box; 
+        }
+        button { width: 100%; padding: 12px; background: #0e7f83; border: none; color: white; font-size: 16px; font-weight: bold; border-radius: 4px; margin-top: 20px; cursor: pointer; }
+        button:hover { background: #0d5a7e; }
+        #log { margin-top: 15px; white-space: pre-wrap; font-family: monospace; color: #00ff66; }
+
+        .author {font-style: italic; color: #5a9ea0; font-weight: normal; font-size: 0.85em;}
+
+        .preview-box { display: none; margin-top: 8px; padding: 10px; background: #181818; border: 1px solid #333; border-radius: 6px; align-items: center; gap: 12px; }
+        .preview-box img { max-width: 75px; max-height: 75px; border-radius: 4px; border: 1px solid #444; background: repeating-conic-gradient(#222 0% 25%, #181818 0% 50%) 50% / 12px 12px; object-fit: contain; }
+        .file-info { font-size: 0.85em; color: #bbb; line-height: 1.4; }
+        .file-info strong { color: #fff; display: block; margin-bottom: 2px; word-break: break-all; }
+        .xml-badge { font-size: 1.6em; line-height: 1; }
+    </style>
+</head>
+<body>
+    <h2>⚡ FunkinSheet Resizer <span class="author">by NickENS'</span></h2>
+    <div class="box">
+        <label>1. Выберите PNG файл:</label>
+        <input type="file" id="pngInput" accept="image/png" onchange="previewPng()">
+        <div id="pngPreview" class="preview-box">
+            <img id="pngImgPreview" src="" alt="PNG Preview">
+            <div class="file-info" id="pngInfo"></div>
+        </div>
+
+        <label>2. Выберите XML файл:</label>
+        <input type="file" id="xmlInput" accept=".xml" onchange="previewXml()">
+        <div id="xmlPreview" class="preview-box">
+            <span class="xml-badge">📄</span>
+            <div class="file-info" id="xmlInfo"></div>
+        </div>
+
+        <label>3. Коэффициент сжатия (0.5 = в 2 раза, 0.25 = в 4 раза):</label>
+        <input type="text" id="scaleInput" value="0.5" placeholder="0.5">
+
+        <label>4. Имя итогового файла:</label>
+        <input type="text" id="nameInput" placeholder="Оставьте поле пустым для сохранения оригинального имени">
+
+        <button onclick="processFiles()">Обработать и Скачать ZIP</button>
+    </div>
+    <div id="log"></div>
+
+    <script>
+        function previewPng() {
+            const file = document.getElementById('pngInput').files[0];
+            const previewBox = document.getElementById('pngPreview');
+            const img = document.getElementById('pngImgPreview');
+            const info = document.getElementById('pngInfo');
+            if (!file) return (previewBox.style.display = 'none');
+
+            const url = URL.createObjectURL(file);
+            img.src = url;
+            const tempImg = new Image();
+            tempImg.src = url;
+            tempImg.onload = () => {
+                info.innerHTML = `<strong>${file.name}</strong>Разрешение: ${tempImg.width}×${tempImg.height} px | ${(file.size / 1024).toFixed(1)} KB`;
+                previewBox.style.display = 'flex';
+            };
+        }
+
+        async function previewXml() {
+            const file = document.getElementById('xmlInput').files[0];
+            const previewBox = document.getElementById('xmlPreview');
+            const info = document.getElementById('xmlInfo');
+            if (!file) return (previewBox.style.display = 'none');
+
+            const text = await file.text();
+            const xmlDoc = new DOMParser().parseFromString(text, "text/xml");
+            const subCount = xmlDoc.getElementsByTagName("SubTexture").length;
+
+            info.innerHTML = `<strong>${file.name}</strong>Найдено кадров: ${subCount} | ${(file.size / 1024).toFixed(1)} KB`;
+            previewBox.style.display = 'flex';
+        }
+
+        async function processFiles() {
+            const xmlFile = document.getElementById('xmlInput').files[0];
+            const pngFile = document.getElementById('pngInput').files[0];
+            const scaleRaw = document.getElementById('scaleInput').value.replace(',', '.');
+            const scale = parseFloat(scaleRaw);
+
+            if (isNaN(scale) || scale <= 0) {
+                alert('Пожалуйста, введите корректный коэффициент сжатия (например, 0.5)!');
+                return;
+            }
+            const customName = document.getElementById('nameInput').value.trim();
+            const log = document.getElementById('log');
+            log.innerText = '';
+
+            if (!xmlFile || !pngFile) {
+                alert('Пожалуйста, выберите ОБА файла (XML и PNG)!');
+                return;
+            }
+
+            // Определение базового имени
+            let baseName = customName;
+            if (!baseName) {
+                baseName = xmlFile.name.replace(/\.[^/.]+$/, "");
+            }
+
+            const zip = new JSZip();
+
+            log.innerText += "Обработка PNG...\n";
+            
+            // 1. Обработка PNG
+            const img = new Image();
+            img.src = URL.createObjectURL(pngFile);
+            await new Promise(r => img.onload = r);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            // Добавление PNG в ZIP
+            const pngBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            zip.file(`${baseName}.png`, pngBlob);
+            log.innerText += `PNG добавлен в архив (${canvas.width}x${canvas.height})\n`;
+
+            // 2. Обработка XML
+            log.innerText += "Обработка XML...\n";
+            const xmlText = await xmlFile.text();
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+            const subTextures = xmlDoc.getElementsByTagName("SubTexture");
+
+            // Замена imagePath внутри XML, если было задано новое имя
+            const textureAtlas = xmlDoc.getElementsByTagName("TextureAtlas")[0];
+            if (textureAtlas && customName) {
+                textureAtlas.setAttribute("imagePath", `${baseName}.png`);
+            }
+
+            const attrs = ["x", "y", "width", "height", "frameX", "frameY", "frameWidth", "frameHeight"];
+
+            for (let sub of subTextures) {
+                for (let attr of attrs) {
+                    if (sub.hasAttribute(attr)) {
+                        let val = parseInt(sub.getAttribute(attr));
+                        sub.setAttribute(attr, Math.round(val * scale));
+                    }
+                }
+            }
+
+            const serializer = new XMLSerializer();
+            const newXmlText = serializer.serializeToString(xmlDoc);
+            
+            // Добавление XML в ZIP
+            zip.file(`${baseName}.xml`, newXmlText);
+            log.innerText += "XML добавлен в архив!\n";
+
+            // 3. Упаковка и скачивание ZIP
+            log.innerText += "Сборка ZIP-архива...\n";
+            const zipContent = await zip.generateAsync({ type: "blob" });
+            downloadFile(zipContent, `${baseName}_FunkinSheet.zip`);
+            log.innerText += "Готово! Архив скачан.";
+        }
+
+        function downloadFile(blob, filename) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+        }
+    </script>
+</body>
+</html>
