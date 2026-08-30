@@ -4,27 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FunkinSheet Resizer</title>
-    <!--  ... -->
+    <!-- ... -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #121212; color: #fff; padding: 20px; max-width: 600px; margin: 0 auto; background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('bg.jpg'); background-repeat: no-repeat; background-size: cover; background-attachment: fixed; min-height: 100vh; overflow: hidden;}
+        * { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 
-        .box { border: 2px dashed #444; padding: 20px; border-radius: 8px; background: #1e1e1e; margin-bottom: 15px; }
-        label { display: block; margin-top: 12px; font-weight: bold; }
-        input[type="file"], input[type="number"], input[type="text"] { 
-            width: 100%; padding: 10px; margin-top: 5px; background: #2a2a2a; border: 1px solid #555; color: #fff; border-radius: 4px; box-sizing: border-box; 
+        body { 
+            font-family: sans-serif; 
+            background: #121212; 
+            color: #fff; 
+            padding: 15px 20px; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('bg.jpg'); 
+            background-repeat: no-repeat; 
+            background-size: cover; 
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        button { width: 100%; padding: 12px; background: #0e7f83; border: none; color: white; font-size: 16px; font-weight: bold; border-radius: 4px; margin-top: 20px; cursor: pointer; }
+
+        h2 { margin-top: 0; margin-bottom: 10px; font-size: 1.4em; }
+
+        .box { border: 2px dashed #444; padding: 15px; border-radius: 8px; background: #1e1e1e; margin-bottom: 10px; }
+        label { display: block; margin-top: 8px; font-weight: bold; font-size: 0.9em; }
+        label:first-child { margin-top: 0; }
+
+        input[type="file"], input[type="number"], input[type="text"] { 
+            width: 100%; padding: 8px; margin-top: 4px; background: #2a2a2a; border: 1px solid #555; color: #fff; border-radius: 4px; 
+        }
+        button { width: 100%; padding: 10px; background: #0e7f83; border: none; color: white; font-size: 15px; font-weight: bold; border-radius: 4px; margin-top: 12px; cursor: pointer; }
         button:hover { background: #0d5a7e; }
-        #log { margin-top: 15px; white-space: pre-wrap; font-family: monospace; color: #00ff66; }
+        #log { margin-top: 10px; white-space: pre-wrap; font-family: monospace; color: #00ff66; font-size: 0.85em; max-height: 80px; overflow-y: auto; }
 
-        .author {font-style: italic; color: #5a9ea0; font-weight: normal; font-size: 0.85em;}
+        .author { font-style: italic; color: #5a9ea0; font-weight: normal; font-size: 0.85em; }
 
-        .preview-box { display: none; margin-top: 8px; padding: 10px; background: #181818; border: 1px solid #333; border-radius: 6px; align-items: center; gap: 12px; }
-        .preview-box img { max-width: 75px; max-height: 75px; border-radius: 4px; border: 1px solid #444; background: repeating-conic-gradient(#222 0% 25%, #181818 0% 50%) 50% / 12px 12px; object-fit: contain; }
-        .file-info { font-size: 0.85em; color: #bbb; line-height: 1.4; }
+        .preview-box { display: none; margin-top: 6px; padding: 8px; background: #181818; border: 1px solid #333; border-radius: 6px; align-items: center; gap: 10px; }
+        .preview-box img { max-width: 55px; max-height: 55px; border-radius: 4px; border: 1px solid #444; background: repeating-conic-gradient(#222 0% 25%, #181818 0% 50%) 50% / 12px 12px; object-fit: contain; }
+        .file-info { font-size: 0.8em; color: #bbb; line-height: 1.3; }
         .file-info strong { color: #fff; display: block; margin-bottom: 2px; word-break: break-all; }
-        .xml-badge { font-size: 1.6em; line-height: 1; }
+        .xml-badge { font-size: 1.4em; line-height: 1; }
+
+        /* Стили для блока квантизации */
+        .opt-container { background: #181818; padding: 10px; border-radius: 6px; border: 1px solid #333; margin-top: 6px; }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 0; font-weight: normal; font-size: 0.85em; }
+        .checkbox-label input { width: auto; margin: 0; }
+        .range-box { display: none; margin-top: 8px; }
+        .range-box input[type="range"] { width: 100%; margin-top: 4px; accent-color: #0e7f83; }
+        .hint-text { font-size: 0.75em; color: #aaa; margin-top: 4px; line-height: 1.2; background: #222; padding: 6px; border-radius: 4px; border-left: 3px solid #0e7f83; }
     </style>
 </head>
 <body>
@@ -47,7 +78,26 @@
         <label>3. Коэффициент сжатия (0.5 = в 2 раза, 0.25 = в 4 раза):</label>
         <input type="text" id="scaleInput" value="0.5" placeholder="0.5">
 
-        <label>4. Имя итогового файла:</label>
+        <label>4. Оптимизация веса PNG (Квантизация палитры):</label>
+        <div class="opt-container">
+            <label class="checkbox-label">
+                <input type="checkbox" id="compressCheck" onchange="toggleCompressOptions()">
+                Включить оптимизацию цвета (уменьшить вес файла)
+            </label>
+
+            <div id="rangeBox" class="range-box">
+                <label style="font-size: 0.85em; font-weight: normal;">
+                    Лимит цветов в палитре: <strong id="colorsVal">256</strong>
+                </label>
+                <input type="range" id="colorsRange" min="32" max="256" step="32" value="256" oninput="document.getElementById('colorsVal').innerText = this.value; updateHint();">
+                
+                <div class="hint-text" id="compressHint">
+                    💡 <strong>256 цветов (Рекомендуется):</strong> Высокое качество сжатия. Вес файла уменьшится на 50–70% без видимых потерь.
+                </div>
+            </div>
+        </div>
+
+        <label>5. Имя итогового файла:</label>
         <input type="text" id="nameInput" placeholder="Оставьте поле пустым для сохранения оригинального имени">
 
         <button onclick="processFiles()">Обработать и Скачать ZIP</button>
@@ -55,6 +105,25 @@
     <div id="log"></div>
 
     <script>
+        function toggleCompressOptions() {
+            const check = document.getElementById('compressCheck');
+            const rangeBox = document.getElementById('rangeBox');
+            rangeBox.style.display = check.checked ? 'block' : 'none';
+        }
+
+        function updateHint() {
+            const val = parseInt(document.getElementById('colorsRange').value);
+            const hint = document.getElementById('compressHint');
+
+            if (val >= 224) {
+                hint.innerHTML = `💡 <strong>${val} цветов (Высокое качество):</strong> Оптимальный баланс. Размер файла снижается на ~50–70%, визуальные изменения незаметны.`;
+            } else if (val >= 128) {
+                hint.innerHTML = `⚖️ <strong>${val} цветов (Среднее сжатие):</strong> Хорошо подходит для простых персонажей. Экономия веса ~70–80%, возможны легкие артефакты на мягких градиентах.`;
+            } else {
+                hint.innerHTML = `⚡ <strong>${val} цветов (Максимальное сжатие):</strong> Сильное урезание размера (-85%). Подходит для легких ассетов или слабого железа, градиенты могут выглядеть ступенчатыми.`;
+            }
+        }
+
         function previewPng() {
             const file = document.getElementById('pngInput').files[0];
             const previewBox = document.getElementById('pngPreview');
@@ -105,7 +174,6 @@
                 return;
             }
 
-            // Определение базового имени
             let baseName = customName;
             if (!baseName) {
                 baseName = xmlFile.name.replace(/\.[^/.]+$/, "");
@@ -115,7 +183,6 @@
 
             log.innerText += "Обработка PNG...\n";
             
-            // 1. Обработка PNG
             const img = new Image();
             img.src = URL.createObjectURL(pngFile);
             await new Promise(r => img.onload = r);
@@ -128,19 +195,29 @@
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            // Добавление PNG в ZIP
-            const pngBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            let pngBlob;
+            const useCompression = document.getElementById('compressCheck').checked;
+
+            if (useCompression && window.UPNG) {
+                log.innerText += "Оптимизация палитры (Квантизация)...\n";
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const colors = parseInt(document.getElementById('colorsRange').value);
+                
+                const quantized = UPNG.encode([imgData.data.buffer], canvas.width, canvas.height, colors);
+                pngBlob = new Blob([quantized], { type: 'image/png' });
+            } else {
+                pngBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            }
+
             zip.file(`${baseName}.png`, pngBlob);
             log.innerText += `PNG добавлен в архив (${canvas.width}x${canvas.height})\n`;
 
-            // 2. Обработка XML
             log.innerText += "Обработка XML...\n";
             const xmlText = await xmlFile.text();
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlText, "text/xml");
             const subTextures = xmlDoc.getElementsByTagName("SubTexture");
 
-            // Замена imagePath внутри XML, если было задано новое имя
             const textureAtlas = xmlDoc.getElementsByTagName("TextureAtlas")[0];
             if (textureAtlas && customName) {
                 textureAtlas.setAttribute("imagePath", `${baseName}.png`);
@@ -160,11 +237,9 @@
             const serializer = new XMLSerializer();
             const newXmlText = serializer.serializeToString(xmlDoc);
             
-            // Добавление XML в ZIP
             zip.file(`${baseName}.xml`, newXmlText);
             log.innerText += "XML добавлен в архив!\n";
 
-            // 3. Упаковка и скачивание ZIP
             log.innerText += "Сборка ZIP-архива...\n";
             const zipContent = await zip.generateAsync({ type: "blob" });
             downloadFile(zipContent, `${baseName}_FunkinSheet.zip`);
