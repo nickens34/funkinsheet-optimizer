@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FunkinSheet Resizer</title>
+    <title>FunkinSheet Optimizer</title>
     <link rel="icon" type="image/jpeg" href="bg.jpg?v=1">
-    <!-- ... -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.min.js"></script>
@@ -31,7 +30,7 @@
 
         h2 { margin-top: 0; margin-bottom: 10px; font-size: 1.4em; }
 
-        .box { border: 2px dashed #444; padding: 15px; border-radius: 8px; background: #1e1e1e; margin-bottom: 10px; }
+        .box { border: 2px dashed #444; padding: 15px; border-radius: 8px; background: #1e1e1e; margin-bottom: 10px; overflow-y: auto; max-height: 75vh; }
         label { display: block; margin-top: 8px; font-weight: bold; font-size: 0.9em; }
         label:first-child { margin-top: 0; }
 
@@ -40,6 +39,11 @@
         }
         button { width: 100%; padding: 10px; background: #0e7f83; border: none; color: white; font-size: 15px; font-weight: bold; border-radius: 4px; margin-top: 12px; cursor: pointer; }
         button:hover { background: #0d5a7e; }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 10px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9em; margin-top: 0; }
+        .tab-btn.active { background: #0e7f83; }
+
         #log { margin-top: 10px; white-space: pre-wrap; font-family: monospace; color: #00ff66; font-size: 0.85em; max-height: 80px; overflow-y: auto; }
 
         .author { font-style: italic; color: #5a9ea0; font-weight: normal; font-size: 0.85em; }
@@ -48,9 +52,8 @@
         .preview-box img { max-width: 55px; max-height: 55px; border-radius: 4px; border: 1px solid #444; background: repeating-conic-gradient(#222 0% 25%, #181818 0% 50%) 50% / 12px 12px; object-fit: contain; }
         .file-info { font-size: 0.8em; color: #bbb; line-height: 1.3; }
         .file-info strong { color: #fff; display: block; margin-bottom: 2px; word-break: break-all; }
-        .xml-badge { font-size: 1.4em; line-height: 1; }
+        .icon-badge { font-size: 1.4em; line-height: 1; }
 
-        /* Стили для блока квантизации */
         .opt-container { background: #181818; padding: 10px; border-radius: 6px; border: 1px solid #333; margin-top: 6px; }
         .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 0; font-weight: normal; font-size: 0.85em; }
         .checkbox-label input { width: auto; margin: 0; }
@@ -60,68 +63,99 @@
     </style>
 </head>
 <body>
-    <h2>⚡ FunkinSheet Resizer <span class="author">by NickENS'</span></h2>
+    <h2>⚡ FunkinSheet Optimizer <span class="author">by NickENS'</span></h2>
+    
+    <div class="tabs">
+        <button id="btn-sprite" class="tab-btn" onclick="setMode('sprite')">Sprite</button>
+        <button id="btn-xml" class="tab-btn active" onclick="setMode('xml')">SpriteSheet</button>
+        <button id="btn-json" class="tab-btn" onclick="setMode('json')">SpriteMap</button>
+    </div>
+
     <div class="box">
-        <label>1. Выберите PNG файл:</label>
+        <label>1. PNG файл:</label>
         <input type="file" id="pngInput" accept="image/png" onchange="previewPng()">
         <div id="pngPreview" class="preview-box">
             <img id="pngImgPreview" src="" alt="PNG Preview">
             <div class="file-info" id="pngInfo"></div>
         </div>
 
-        <label>2. Выберите XML файл:</label>
-        <input type="file" id="xmlInput" accept=".xml" onchange="previewXml()">
-        <div id="xmlPreview" class="preview-box">
-            <span class="xml-badge">📄</span>
-            <div class="file-info" id="xmlInfo"></div>
+        <div id="xml-container">
+            <label>2. XML файл:</label>
+            <input type="file" id="xmlInput" accept=".xml" onchange="previewDataFile('xml')">
         </div>
 
-        <label>3. Коэффициент сжатия (0.5 = в 2 раза, 0.25 = в 4 раза):</label>
+        <div id="json-container" style="display: none;">
+            <label>2. Атлас (spritemap.json):</label>
+            <input type="file" id="jsonAtlasInput" accept=".json">
+            
+            <label>3. Анимация (Animation.json):</label>
+            <input type="file" id="jsonAnimInput" accept=".json">
+        </div>
+
+        <div id="dataPreview" class="preview-box">
+            <span class="icon-badge">📄</span>
+            <div class="file-info" id="dataInfo"></div>
+        </div>
+
+        <label>Масштаб (0.5 = в 2 раза, 0.25 = в 4 раза):</label>
         <input type="text" id="scaleInput" value="0.5" placeholder="0.5">
 
-        <label>4. Оптимизация веса PNG (Квантизация палитры):</label>
+        <label>Оптимизация веса PNG (Квантизация):</label>
         <div class="opt-container">
             <label class="checkbox-label">
                 <input type="checkbox" id="compressCheck" onchange="toggleCompressOptions()">
-                Включить оптимизацию цвета (уменьшить вес файла)
+                Включить сжатие палитры
             </label>
 
             <div id="rangeBox" class="range-box">
                 <label style="font-size: 0.85em; font-weight: normal;">
-                    Лимит цветов в палитре: <strong id="colorsVal">256</strong>
+                    Лимит цветов: <strong id="colorsVal">256</strong>
                 </label>
                 <input type="range" id="colorsRange" min="32" max="256" step="32" value="256" oninput="document.getElementById('colorsVal').innerText = this.value; updateHint();">
-                
                 <div class="hint-text" id="compressHint">
-                    💡 <strong>256 цветов (Рекомендуется):</strong> Высокое качество сжатия. Вес файла уменьшится на 50–70% без видимых потерь.
+                    💡 <strong>256 цветов:</strong> Высокое качество сжатия.
                 </div>
             </div>
         </div>
 
-        <label>5. Имя итогового файла:</label>
-        <input type="text" id="nameInput" placeholder="Оставьте поле пустым для сохранения оригинального имени">
+        <label>Имя итогового файла:</label>
+        <input type="text" id="nameInput" placeholder="Оставьте пустым для оригинального имени">
 
         <button onclick="processFiles()">Обработать и Скачать ZIP</button>
     </div>
     <div id="log"></div>
 
     <script>
+        let currentMode = 'xml';
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('xml-container').style.display = (mode === 'xml') ? 'block' : 'none';
+            document.getElementById('json-container').style.display = (mode === 'json') ? 'block' : 'none';
+            
+            document.getElementById('btn-sprite').className = 'tab-btn ' + (mode === 'sprite' ? 'active' : '');
+            document.getElementById('btn-xml').className = 'tab-btn ' + (mode === 'xml' ? 'active' : '');
+            document.getElementById('btn-json').className = 'tab-btn ' + (mode === 'json' ? 'active' : '');
+            
+            // Прячем превьюшку данных, если перешли в Sprite
+            if (mode === 'sprite') {
+                document.getElementById('dataPreview').style.display = 'none';
+            }
+        }
+
         function toggleCompressOptions() {
-            const check = document.getElementById('compressCheck');
-            const rangeBox = document.getElementById('rangeBox');
-            rangeBox.style.display = check.checked ? 'block' : 'none';
+            document.getElementById('rangeBox').style.display = document.getElementById('compressCheck').checked ? 'block' : 'none';
         }
 
         function updateHint() {
             const val = parseInt(document.getElementById('colorsRange').value);
             const hint = document.getElementById('compressHint');
-
             if (val >= 224) {
-                hint.innerHTML = `💡 <strong>${val} цветов (Высокое качество):</strong> Оптимальный баланс. Размер файла снижается на ~50–70%, визуальные изменения незаметны.`;
+                hint.innerHTML = `💡 <strong>${val} цветов (Высокое качество):</strong> Оптимальный баланс.`;
             } else if (val >= 128) {
-                hint.innerHTML = `⚖️ <strong>${val} цветов (Среднее сжатие):</strong> Хорошо подходит для простых персонажей. Экономия веса ~70–80%, возможны легкие артефакты на мягких градиентах.`;
+                hint.innerHTML = `⚖️ <strong>${val} цветов (Среднее сжатие):</strong> Хорошо для простых персонажей.`;
             } else {
-                hint.innerHTML = `⚡ <strong>${val} цветов (Максимальное сжатие):</strong> Сильное урезание размера (-85%). Подходит для легких ассетов или слабого железа, градиенты могут выглядеть ступенчатыми.`;
+                hint.innerHTML = `⚡ <strong>${val} цветов (Максимальное сжатие):</strong> Подходит для легких ассетов.`;
             }
         }
 
@@ -142,48 +176,44 @@
             };
         }
 
-        async function previewXml() {
-            const file = document.getElementById('xmlInput').files[0];
-            const previewBox = document.getElementById('xmlPreview');
-            const info = document.getElementById('xmlInfo');
+        async function previewDataFile(type) {
+            const fileInput = document.getElementById(type + 'Input');
+            const file = fileInput.files[0];
+            const previewBox = document.getElementById('dataPreview');
+            const info = document.getElementById('dataInfo');
             if (!file) return (previewBox.style.display = 'none');
 
-            const text = await file.text();
-            const xmlDoc = new DOMParser().parseFromString(text, "text/xml");
-            const subCount = xmlDoc.getElementsByTagName("SubTexture").length;
-
-            info.innerHTML = `<strong>${file.name}</strong>Найдено кадров: ${subCount} | ${(file.size / 1024).toFixed(1)} KB`;
+            info.innerHTML = `<strong>${file.name}</strong>Размер: ${(file.size / 1024).toFixed(1)} KB`;
             previewBox.style.display = 'flex';
         }
 
         async function processFiles() {
-            const xmlFile = document.getElementById('xmlInput').files[0];
             const pngFile = document.getElementById('pngInput').files[0];
             const scaleRaw = document.getElementById('scaleInput').value.replace(',', '.');
             const scale = parseFloat(scaleRaw);
-
-            if (isNaN(scale) || scale <= 0) {
-                alert('Пожалуйста, введите корректный коэффициент сжатия (например, 0.5)!');
-                return;
-            }
-            const customName = document.getElementById('nameInput').value.trim();
             const log = document.getElementById('log');
             log.innerText = '';
 
-            if (!xmlFile || !pngFile) {
-                alert('Пожалуйста, выберите ОБА файла (XML и PNG)!');
-                return;
-            }
+            if (isNaN(scale) || scale <= 0) return alert('Введите корректный коэффициент сжатия!');
+            if (!pngFile) return alert('Пожалуйста, выберите PNG файл!');
 
-            let baseName = customName;
-            if (!baseName) {
-                baseName = xmlFile.name.replace(/\.[^/.]+$/, "");
-            }
-
+            const customName = document.getElementById('nameInput').value.trim();
             const zip = new JSZip();
 
+            // Определяем базовое имя
+            let baseName = customName;
+            if (!baseName) {
+                if (currentMode === 'xml' && document.getElementById('xmlInput').files[0]) {
+                    baseName = document.getElementById('xmlInput').files[0].name.replace(/\.[^/.]+$/, "");
+                } else if (currentMode === 'json' && document.getElementById('jsonAtlasInput').files[0]) {
+                    baseName = document.getElementById('jsonAtlasInput').files[0].name.replace(/\.[^/.]+$/, "");
+                } else {
+                    baseName = pngFile.name.replace(/\.[^/.]+$/, "");
+                }
+            }
+
+            // Обработка PNG
             log.innerText += "Обработка PNG...\n";
-            
             const img = new Image();
             img.src = URL.createObjectURL(pngFile);
             await new Promise(r => img.onload = r);
@@ -197,61 +227,138 @@
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
             let pngBlob;
-            const useCompression = document.getElementById('compressCheck').checked;
-
-            if (useCompression && window.UPNG) {
-                log.innerText += "Оптимизация палитры (Квантизация)...\n";
+            if (document.getElementById('compressCheck').checked && window.UPNG) {
+                log.innerText += "Квантизация палитры PNG...\n";
                 const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const colors = parseInt(document.getElementById('colorsRange').value);
-                
                 const quantized = UPNG.encode([imgData.data.buffer], canvas.width, canvas.height, colors);
                 pngBlob = new Blob([quantized], { type: 'image/png' });
             } else {
                 pngBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             }
-
             zip.file(`${baseName}.png`, pngBlob);
-            log.innerText += `PNG добавлен в архив (${canvas.width}x${canvas.height})\n`;
 
-            log.innerText += "Обработка XML...\n";
-            const xmlText = await xmlFile.text();
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-            const subTextures = xmlDoc.getElementsByTagName("SubTexture");
-
-            const textureAtlas = xmlDoc.getElementsByTagName("TextureAtlas")[0];
-            if (textureAtlas && customName) {
-                textureAtlas.setAttribute("imagePath", `${baseName}.png`);
-            }
-
-            const attrs = ["x", "y", "width", "height", "frameX", "frameY", "frameWidth", "frameHeight"];
-
-            for (let sub of subTextures) {
-                for (let attr of attrs) {
-                    if (sub.hasAttribute(attr)) {
-                        let val = parseInt(sub.getAttribute(attr));
-                        sub.setAttribute(attr, Math.round(val * scale));
+            // Обработка разметки в зависимости от режима
+            if (currentMode === 'sprite') {
+                log.innerText += `Режим Sprite: сохранение только PNG.\n`;
+            } 
+            else if (currentMode === 'xml') {
+                const xmlFile = document.getElementById('xmlInput').files[0];
+                if (!xmlFile) return alert('Выберите XML файл!');
+                
+                log.innerText += `Обработка XML...\n`;
+                const textData = await xmlFile.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(textData, "text/xml");
+                if (customName) {
+                    const atlas = xmlDoc.getElementsByTagName("TextureAtlas")[0];
+                    if (atlas) atlas.setAttribute("imagePath", `${baseName}.png`);
+                }
+                const attrs = ["x", "y", "width", "height", "frameX", "frameY", "frameWidth", "frameHeight"];
+                for (let sub of xmlDoc.getElementsByTagName("SubTexture")) {
+                    for (let attr of attrs) {
+                        if (sub.hasAttribute(attr)) {
+                            sub.setAttribute(attr, Math.round(parseInt(sub.getAttribute(attr)) * scale));
+                        }
                     }
+                }
+                zip.file(`${baseName}.xml`, new XMLSerializer().serializeToString(xmlDoc));
+                log.innerText += "XML добавлен в архив!\n";
+                
+            } 
+            else if (currentMode === 'json') {
+                const atlasFile = document.getElementById('jsonAtlasInput').files[0];
+                const animFile = document.getElementById('jsonAnimInput').files[0];
+                if (!atlasFile || !animFile) return alert('Выберите оба JSON файла (spritemap и Animation)!');
+
+                log.innerText += `Обработка Spritemap JSON...\n`;
+                try {
+                    // Обработка spritemap.json
+                    let atlasData = JSON.parse(await atlasFile.text());
+                    if (atlasData.meta) {
+                        if (customName) atlasData.meta.image = `${baseName}.png`;
+                        if (atlasData.meta.size) {
+                            atlasData.meta.size.w = Math.round(atlasData.meta.size.w * scale);
+                            atlasData.meta.size.h = Math.round(atlasData.meta.size.h * scale);
+                        }
+                    }
+                    if (atlasData.ATLAS && atlasData.ATLAS.SPRITES) {
+                        atlasData.ATLAS.SPRITES.forEach(item => {
+                            if (item.sprite) {
+                                ['x', 'y', 'w', 'h'].forEach(attr => {
+                                    if (item.sprite[attr] !== undefined) {
+                                        item.sprite[attr] = Math.round(item.sprite[attr] * scale);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    zip.file(`${baseName}.json`, JSON.stringify(atlasData, null, 0));
+
+                    // Обработка Animation.json
+                    log.innerText += `Оптимизация Animation JSON...\n`;
+                    let animData = JSON.parse(await animFile.text());
+                    let duplicatesRemoved = 0;
+
+                    if (animData.AN && animData.AN.TL && animData.AN.TL.L) {
+                        animData.AN.TL.L.forEach(layer => {
+                            if (!layer.FR) return;
+                            let optimizedFrames = [];
+                            let currentFrame = null;
+
+                            layer.FR.forEach(frame => {
+                                if (frame.E && frame.E[0] && frame.E[0].SI && frame.E[0].SI.TRP) {
+                                    let trp = frame.E[0].SI.TRP;
+                                    trp.x = Math.round((trp.x * scale) * 1000) / 1000;
+                                    trp.y = Math.round((trp.y * scale) * 1000) / 1000;
+                                }
+
+                                if (!currentFrame) {
+                                    currentFrame = frame;
+                                    return;
+                                }
+                                
+                                if (isFrameEqual(currentFrame, frame)) {
+                                    currentFrame.DU = (currentFrame.DU || 1) + (frame.DU || 1);
+                                    duplicatesRemoved++;
+                                } else {
+                                    optimizedFrames.push(currentFrame);
+                                    currentFrame = frame;
+                                }
+                            });
+                            if (currentFrame) optimizedFrames.push(currentFrame);
+                            layer.FR = optimizedFrames;
+                        });
+                    }
+                    if (duplicatesRemoved > 0) log.innerText += `Очищено дубликатов в Animation.json: ${duplicatesRemoved}\n`;
+                    
+                    const animFileName = customName ? `${baseName}_Animation.json` : animFile.name;
+                    zip.file(animFileName, JSON.stringify(animData, null, 0));
+                    log.innerText += "Разметка JSON добавлена в архив!\n";
+
+                } catch (e) {
+                    return alert('Ошибка чтения JSON: ' + e.message);
                 }
             }
 
-            const serializer = new XMLSerializer();
-            const newXmlText = serializer.serializeToString(xmlDoc);
-            
-            zip.file(`${baseName}.xml`, newXmlText);
-            log.innerText += "XML добавлен в архив!\n";
-
+            // Сборка
             log.innerText += "Сборка ZIP-архива...\n";
             const zipContent = await zip.generateAsync({ type: "blob" });
-            downloadFile(zipContent, `${baseName}_FunkinSheet.zip`);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(zipContent);
+            const downloadName = customName ? `${customName}_FunkinSheet.zip` : `${baseName}_Optimized.zip`;
+            a.download = downloadName;
+            a.click();
             log.innerText += "Готово! Архив скачан.";
         }
 
-        function downloadFile(blob, filename) {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = filename;
-            a.click();
+        function isFrameEqual(f1, f2) {
+            if (!f1.E || !f1.E[0] || !f1.E[0].SI || !f2.E || !f2.E[0] || !f2.E[0].SI) return false;
+            const e1 = f1.E[0].SI;
+            const e2 = f2.E[0].SI;
+            const sameSymbol = e1.SN === e2.SN && e1.FF === e2.FF;
+            const sameTRP = (e1.TRP ? e1.TRP.x : 0) === (e2.TRP ? e2.TRP.x : 0) && (e1.TRP ? e1.TRP.y : 0) === (e2.TRP ? e2.TRP.y : 0);
+            return sameSymbol && sameTRP;
         }
     </script>
 </body>
