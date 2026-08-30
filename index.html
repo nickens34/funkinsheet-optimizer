@@ -8,59 +8,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.min.js"></script>
-    <style>
-        * { box-sizing: border-box; }
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
-
-        body { 
-            font-family: sans-serif; 
-            background: #121212; 
-            color: #fff; 
-            padding: 15px 20px; 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('bg.jpg'); 
-            background-repeat: no-repeat; 
-            background-size: cover; 
-            background-attachment: fixed;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        h2 { margin-top: 0; margin-bottom: 10px; font-size: 1.4em; }
-
-        .box { border: 2px dashed #444; padding: 15px; border-radius: 8px; background: #1e1e1e; margin-bottom: 10px; overflow-y: auto; max-height: 75vh; }
-        label { display: block; margin-top: 8px; font-weight: bold; font-size: 0.9em; }
-        label:first-child { margin-top: 0; }
-
-        input[type="file"], input[type="number"], input[type="text"] { 
-            width: 100%; padding: 8px; margin-top: 4px; background: #2a2a2a; border: 1px solid #555; color: #fff; border-radius: 4px; 
-        }
-        button { width: 100%; padding: 10px; background: #0e7f83; border: none; color: white; font-size: 15px; font-weight: bold; border-radius: 4px; margin-top: 12px; cursor: pointer; }
-        button:hover { background: #0d5a7e; }
-        
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 10px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9em; margin-top: 0; }
-        .tab-btn.active { background: #0e7f83; }
-
-        #log { margin-top: 10px; white-space: pre-wrap; font-family: monospace; color: #00ff66; font-size: 0.85em; max-height: 80px; overflow-y: auto; }
-
-        .author { font-style: italic; color: #5a9ea0; font-weight: normal; font-size: 0.85em; }
-
-        .preview-box { display: none; margin-top: 6px; padding: 8px; background: #181818; border: 1px solid #333; border-radius: 6px; align-items: center; gap: 10px; }
-        .preview-box img { max-width: 55px; max-height: 55px; border-radius: 4px; border: 1px solid #444; background: repeating-conic-gradient(#222 0% 25%, #181818 0% 50%) 50% / 12px 12px; object-fit: contain; }
-        .file-info { font-size: 0.8em; color: #bbb; line-height: 1.3; }
-        .file-info strong { color: #fff; display: block; margin-bottom: 2px; word-break: break-all; }
-        .icon-badge { font-size: 1.4em; line-height: 1; }
-
-        .opt-container { background: #181818; padding: 10px; border-radius: 6px; border: 1px solid #333; margin-top: 6px; }
-        .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 0; font-weight: normal; font-size: 0.85em; }
-        .checkbox-label input { width: auto; margin: 0; }
-        .range-box { display: none; margin-top: 8px; }
-        .range-box input[type="range"] { width: 100%; margin-top: 4px; accent-color: #0e7f83; }
-        .hint-text { font-size: 0.75em; color: #aaa; margin-top: 4px; line-height: 1.2; background: #222; padding: 6px; border-radius: 4px; border-left: 3px solid #0e7f83; }
-    </style>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js"></script>
 </head>
 <body>
     <h2>⚡ FunkinSheet Optimizer <span class="author">by NickENS'</span></h2>
@@ -97,6 +46,26 @@
             <div class="file-info" id="dataInfo"></div>
         </div>
 
+        <!-- Новый блок для файла конфигурации -->
+        <!-- Сворачиваемый блок под стрелочку -->
+        <details id="character-data-container" class="char-details">
+            <summary>⚙️[Experimental] <br> Масштабирование конфигурации"data/character" (Не обязательно)</summary>
+            <div class="char-content">
+                <label style="margin-top: 0;">Файл character'a (.json / .xml):</label>
+                <input type="file" id="charDataInput" accept=".xml,.json" onchange="previewDataFile('charData')">
+                
+                <label>Движок (формат масштабирования):</label>
+                <select id="engineSelect">
+                    <option value="codename">Codename Engine (XML)</option>
+                    <!-- <option value="psych">Psych Engine (JSON)</option>
+                    <option value="vslice">V-Slice Engine (JSON)</option> Не готово и потому вырезано ну вот так-->
+                </select>
+                <div class="hint-text" style="margin-top: 8px;">
+                    💡 Файл будет сохранён в папке <b>character data</b>.
+                </div>
+            </div>
+        </details>
+
         <label>Масштаб (0.5 = в 2 раза, 0.25 = в 4 раза):</label>
         <input type="text" id="scaleInput" value="0.5" placeholder="0.5">
 
@@ -119,247 +88,10 @@
         </div>
 
         <label>Имя итогового файла:</label>
-        <input type="text" id="nameInput" placeholder="Оставьте пустым для оригинального имени">
+        <input type="text" id="nameInput" placeholder="Оставьте пустым для оригинала">
 
         <button onclick="processFiles()">Обработать и Скачать ZIP</button>
     </div>
     <div id="log"></div>
-
-    <script>
-        let currentMode = 'xml';
-
-        function setMode(mode) {
-            currentMode = mode;
-            document.getElementById('xml-container').style.display = (mode === 'xml') ? 'block' : 'none';
-            document.getElementById('json-container').style.display = (mode === 'json') ? 'block' : 'none';
-            
-            document.getElementById('btn-sprite').className = 'tab-btn ' + (mode === 'sprite' ? 'active' : '');
-            document.getElementById('btn-xml').className = 'tab-btn ' + (mode === 'xml' ? 'active' : '');
-            document.getElementById('btn-json').className = 'tab-btn ' + (mode === 'json' ? 'active' : '');
-            
-            // Прячем превьюшку данных, если перешли в Sprite
-            if (mode === 'sprite') {
-                document.getElementById('dataPreview').style.display = 'none';
-            }
-        }
-
-        function toggleCompressOptions() {
-            document.getElementById('rangeBox').style.display = document.getElementById('compressCheck').checked ? 'block' : 'none';
-        }
-
-        function updateHint() {
-            const val = parseInt(document.getElementById('colorsRange').value);
-            const hint = document.getElementById('compressHint');
-            if (val >= 224) {
-                hint.innerHTML = `💡 <strong>${val} цветов (Высокое качество):</strong> Оптимальный баланс.`;
-            } else if (val >= 128) {
-                hint.innerHTML = `⚖️ <strong>${val} цветов (Среднее сжатие):</strong> Хорошо для простых персонажей.`;
-            } else {
-                hint.innerHTML = `⚡ <strong>${val} цветов (Максимальное сжатие):</strong> Подходит для легких ассетов.`;
-            }
-        }
-
-        function previewPng() {
-            const file = document.getElementById('pngInput').files[0];
-            const previewBox = document.getElementById('pngPreview');
-            const img = document.getElementById('pngImgPreview');
-            const info = document.getElementById('pngInfo');
-            if (!file) return (previewBox.style.display = 'none');
-
-            const url = URL.createObjectURL(file);
-            img.src = url;
-            const tempImg = new Image();
-            tempImg.src = url;
-            tempImg.onload = () => {
-                info.innerHTML = `<strong>${file.name}</strong>Разрешение: ${tempImg.width}×${tempImg.height} px | ${(file.size / 1024).toFixed(1)} KB`;
-                previewBox.style.display = 'flex';
-            };
-        }
-
-        async function previewDataFile(type) {
-            const fileInput = document.getElementById(type + 'Input');
-            const file = fileInput.files[0];
-            const previewBox = document.getElementById('dataPreview');
-            const info = document.getElementById('dataInfo');
-            if (!file) return (previewBox.style.display = 'none');
-
-            info.innerHTML = `<strong>${file.name}</strong>Размер: ${(file.size / 1024).toFixed(1)} KB`;
-            previewBox.style.display = 'flex';
-        }
-
-        async function processFiles() {
-            const pngFile = document.getElementById('pngInput').files[0];
-            const scaleRaw = document.getElementById('scaleInput').value.replace(',', '.');
-            const scale = parseFloat(scaleRaw);
-            const log = document.getElementById('log');
-            log.innerText = '';
-
-            if (isNaN(scale) || scale <= 0) return alert('Введите корректный коэффициент сжатия!');
-            if (!pngFile) return alert('Пожалуйста, выберите PNG файл!');
-
-            const customName = document.getElementById('nameInput').value.trim();
-            const zip = new JSZip();
-
-            // Определяем базовое имя
-            let baseName = customName;
-            if (!baseName) {
-                if (currentMode === 'xml' && document.getElementById('xmlInput').files[0]) {
-                    baseName = document.getElementById('xmlInput').files[0].name.replace(/\.[^/.]+$/, "");
-                } else if (currentMode === 'json' && document.getElementById('jsonAtlasInput').files[0]) {
-                    baseName = document.getElementById('jsonAtlasInput').files[0].name.replace(/\.[^/.]+$/, "");
-                } else {
-                    baseName = pngFile.name.replace(/\.[^/.]+$/, "");
-                }
-            }
-
-            // Обработка PNG
-            log.innerText += "Обработка PNG...\n";
-            const img = new Image();
-            img.src = URL.createObjectURL(pngFile);
-            await new Promise(r => img.onload = r);
-
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.round(img.width * scale);
-            canvas.height = Math.round(img.height * scale);
-            const ctx = canvas.getContext('2d');
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-            let pngBlob;
-            if (document.getElementById('compressCheck').checked && window.UPNG) {
-                log.innerText += "Квантизация палитры PNG...\n";
-                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const colors = parseInt(document.getElementById('colorsRange').value);
-                const quantized = UPNG.encode([imgData.data.buffer], canvas.width, canvas.height, colors);
-                pngBlob = new Blob([quantized], { type: 'image/png' });
-            } else {
-                pngBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-            }
-            zip.file(`${baseName}.png`, pngBlob);
-
-            // Обработка разметки в зависимости от режима
-            if (currentMode === 'sprite') {
-                log.innerText += `Режим Sprite: сохранение только PNG.\n`;
-            } 
-            else if (currentMode === 'xml') {
-                const xmlFile = document.getElementById('xmlInput').files[0];
-                if (!xmlFile) return alert('Выберите XML файл!');
-                
-                log.innerText += `Обработка XML...\n`;
-                const textData = await xmlFile.text();
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(textData, "text/xml");
-                if (customName) {
-                    const atlas = xmlDoc.getElementsByTagName("TextureAtlas")[0];
-                    if (atlas) atlas.setAttribute("imagePath", `${baseName}.png`);
-                }
-                const attrs = ["x", "y", "width", "height", "frameX", "frameY", "frameWidth", "frameHeight"];
-                for (let sub of xmlDoc.getElementsByTagName("SubTexture")) {
-                    for (let attr of attrs) {
-                        if (sub.hasAttribute(attr)) {
-                            sub.setAttribute(attr, Math.round(parseInt(sub.getAttribute(attr)) * scale));
-                        }
-                    }
-                }
-                zip.file(`${baseName}.xml`, new XMLSerializer().serializeToString(xmlDoc));
-                log.innerText += "XML добавлен в архив!\n";
-                
-            } 
-            else if (currentMode === 'json') {
-                const atlasFile = document.getElementById('jsonAtlasInput').files[0];
-                const animFile = document.getElementById('jsonAnimInput').files[0];
-                if (!atlasFile || !animFile) return alert('Выберите оба JSON файла (spritemap и Animation)!');
-
-                log.innerText += `Обработка Spritemap JSON...\n`;
-                try {
-                    // Обработка spritemap.json
-                    let atlasData = JSON.parse(await atlasFile.text());
-                    if (atlasData.meta) {
-                        if (customName) atlasData.meta.image = `${baseName}.png`;
-                        if (atlasData.meta.size) {
-                            atlasData.meta.size.w = Math.round(atlasData.meta.size.w * scale);
-                            atlasData.meta.size.h = Math.round(atlasData.meta.size.h * scale);
-                        }
-                    }
-                    if (atlasData.ATLAS && atlasData.ATLAS.SPRITES) {
-                        atlasData.ATLAS.SPRITES.forEach(item => {
-                            if (item.sprite) {
-                                ['x', 'y', 'w', 'h'].forEach(attr => {
-                                    if (item.sprite[attr] !== undefined) {
-                                        item.sprite[attr] = Math.round(item.sprite[attr] * scale);
-                                    }
-                                });
-                            }
-                        });
-                    }
-                    zip.file(`${baseName}.json`, JSON.stringify(atlasData, null, 0));
-
-                    // Обработка Animation.json
-                    log.innerText += `Оптимизация Animation JSON...\n`;
-                    let animData = JSON.parse(await animFile.text());
-                    let duplicatesRemoved = 0;
-
-                    if (animData.AN && animData.AN.TL && animData.AN.TL.L) {
-                        animData.AN.TL.L.forEach(layer => {
-                            if (!layer.FR) return;
-                            let optimizedFrames = [];
-                            let currentFrame = null;
-
-                            layer.FR.forEach(frame => {
-                                if (frame.E && frame.E[0] && frame.E[0].SI && frame.E[0].SI.TRP) {
-                                    let trp = frame.E[0].SI.TRP;
-                                    trp.x = Math.round((trp.x * scale) * 1000) / 1000;
-                                    trp.y = Math.round((trp.y * scale) * 1000) / 1000;
-                                }
-
-                                if (!currentFrame) {
-                                    currentFrame = frame;
-                                    return;
-                                }
-                                
-                                if (isFrameEqual(currentFrame, frame)) {
-                                    currentFrame.DU = (currentFrame.DU || 1) + (frame.DU || 1);
-                                    duplicatesRemoved++;
-                                } else {
-                                    optimizedFrames.push(currentFrame);
-                                    currentFrame = frame;
-                                }
-                            });
-                            if (currentFrame) optimizedFrames.push(currentFrame);
-                            layer.FR = optimizedFrames;
-                        });
-                    }
-                    if (duplicatesRemoved > 0) log.innerText += `Очищено дубликатов в Animation.json: ${duplicatesRemoved}\n`;
-                    
-                    const animFileName = customName ? `${baseName}_Animation.json` : animFile.name;
-                    zip.file(animFileName, JSON.stringify(animData, null, 0));
-                    log.innerText += "Разметка JSON добавлена в архив!\n";
-
-                } catch (e) {
-                    return alert('Ошибка чтения JSON: ' + e.message);
-                }
-            }
-
-            // Сборка
-            log.innerText += "Сборка ZIP-архива...\n";
-            const zipContent = await zip.generateAsync({ type: "blob" });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(zipContent);
-            const downloadName = customName ? `${customName}_FunkinSheet.zip` : `${baseName}_Optimized.zip`;
-            a.download = downloadName;
-            a.click();
-            log.innerText += "Готово! Архив скачан.";
-        }
-
-        function isFrameEqual(f1, f2) {
-            if (!f1.E || !f1.E[0] || !f1.E[0].SI || !f2.E || !f2.E[0] || !f2.E[0].SI) return false;
-            const e1 = f1.E[0].SI;
-            const e2 = f2.E[0].SI;
-            const sameSymbol = e1.SN === e2.SN && e1.FF === e2.FF;
-            const sameTRP = (e1.TRP ? e1.TRP.x : 0) === (e2.TRP ? e2.TRP.x : 0) && (e1.TRP ? e1.TRP.y : 0) === (e2.TRP ? e2.TRP.y : 0);
-            return sameSymbol && sameTRP;
-        }
-    </script>
 </body>
 </html>
