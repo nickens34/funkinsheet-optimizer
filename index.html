@@ -14,14 +14,24 @@
 <body>
     <h2>⚡ FunkinSheet Optimizer <span class="author">by NickENS'</span></h2>
     
-    <div class="tabs">
-        <button id="btn-sprite" class="tab-btn" onclick="setMode('sprite')">Sprite</button>
-        <button id="btn-xml" class="tab-btn active" onclick="setMode('xml')">SpriteSheet</button>
-        <button id="btn-json" class="tab-btn" onclick="setMode('json')">SpriteMap</button>
+    <!-- Верхние вкладки -->
+    <div class="top-tabs">
+        <button id="top-all" class="top-tab-btn active" onclick="setTopMode('all')">⭐ All Sprites</button>
+        <button id="top-character" class="top-tab-btn beta" onclick="setTopMode('character')">🧪 Characters [Beta]</button>
+        <button id="top-stage" class="top-tab-btn beta" onclick="setTopMode('stage')">🧪 Stages [Beta]</button>
+    </div>
+
+    <!-- Нижние подвкладки (контейнер) -->
+    <div id="sub-tabs-container">
+        <div class="tabs" id="subTabs">
+            <button id="btn-sprite" class="tab-btn" onclick="setSubMode('sprite')">Sprite</button>
+            <button id="btn-xml" class="tab-btn active" onclick="setSubMode('xml')">SpriteSheet</button>
+            <button id="btn-json" class="tab-btn" onclick="setSubMode('json')">SpriteMap</button>
+        </div>
     </div>
 
     <div class="box">
-        <label>1. PNG файл:</label>
+        <label id="first-label">1. PNG файл:</label>
         <input type="file" id="pngInput" accept="image/png" onchange="previewPng()">
         <div id="pngPreview" class="preview-box">
             <img id="pngImgPreview" src="" alt="PNG Preview">
@@ -46,19 +56,21 @@
             <div class="file-info" id="dataInfo"></div>
         </div>
 
-        <!-- Новый блок для файла конфигурации -->
-        <!-- Сворачиваемый блок под стрелочку -->
-        <details id="character-data-container" class="char-details">
-            <summary>⚙️[Experimental] <br> Масштабирование конфигурации"data/character" (Не обязательно)</summary>
+        <!-- Блок experimental для Characters -->
+        <details id="character-data-container" class="char-details" style="display: none;">
+            <summary>
+                <span class="summary-text">
+                    <span class="summary-title">[Experimental]</span>
+                    <span class="summary-sub">Масштабирование конфигурации "data/character"</span>
+                </span>
+            </summary>
             <div class="char-content">
                 <label style="margin-top: 0;">Файл character'a (.json / .xml):</label>
                 <input type="file" id="charDataInput" accept=".xml,.json" onchange="previewDataFile('charData')">
                 
                 <label>Движок (формат масштабирования):</label>
-                <select id="engineSelect">
+                <select id="engineSelectChar">
                     <option value="codename">Codename Engine (XML)</option>
-                    <!-- <option value="psych">Psych Engine (JSON)</option>
-                    <option value="vslice">V-Slice Engine (JSON)</option> Не готово и потому вырезано ну вот так-->
                 </select>
                 <div class="hint-text" style="margin-top: 8px;">
                     💡 Файл будет сохранён в папке <b>character data</b>.
@@ -66,7 +78,29 @@
             </div>
         </details>
 
-        <label>Масштаб (0.5 = в 2 раза, 0.25 = в 4 раза):</label>
+        <!-- Блок experimental для Stages -->
+        <details id="stage-data-container" class="char-details" style="display: none;">
+            <summary>
+                <span class="summary-text">
+                    <span class="summary-title">[Experimental]</span>
+                    <span class="summary-sub">Масштабирование конфигурации "data/stage"</span>
+                </span>
+            </summary>
+            <div class="char-content">
+                <label style="margin-top: 0;">Файл stage (.xml):</label>
+                <input type="file" id="stageDataInput" accept=".xml" onchange="previewDataFile('stageData')">
+                
+                <label>Движок (формат масштабирования):</label>
+                <select id="engineSelectStage">
+                    <option value="codename">Codename Engine (XML)</option>
+                </select>
+                <div class="hint-text" style="margin-top: 8px;">
+                    💡 Файл будет сохранён в папке <b>stage data</b>.
+                </div>
+            </div>
+        </details>
+
+        <label>Масштаб (1 = ничего | 0.5 = в 2 раза меньше | 0.25 = в 4 раза меньше):</label>
         <input type="text" id="scaleInput" value="0.5" placeholder="0.5">
 
         <label>Оптимизация веса PNG (Квантизация):</label>
