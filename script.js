@@ -117,6 +117,7 @@ async function previewDataFile(type) {
 
 async function processFiles() {
     const pngFile = document.getElementById('pngInput').files[0];
+    const pngBaseName = pngFile.name.replace(/\.[^/.]+$/, "");
     const scaleRaw = document.getElementById('scaleInput').value.replace(',', '.');
     const scale = parseFloat(scaleRaw);
     const log = document.getElementById('log');
@@ -302,34 +303,47 @@ async function processFiles() {
         }
         log.innerText += `Обработка файла сцены (stage)...\n`;
         try {
-            const engine = document.getElementById('engineSelectStage').value;
             const stageText = await stageFile.text();
             const parser = new DOMParser();
             const stageDoc = parser.parseFromString(stageText, "text/xml");
 
-            // Если выбран SpriteSheet, используем размеры из PNG (origWidth/Height)
-            // Если выбран Sprite (одиночный спрайт), тоже используем размер PNG
-            // В любом случае формула одна
+            // Определяем имя спрайта для поиска – это имя PNG без расширения
+            // Используем pngBaseName, который мы сохранили ранее (оригинальное имя PNG)
+            const spriteName = pngBaseName; // например, "tiles"
+            log.innerText += `  - Ищем спрайт с именем "${spriteName}"...\n`;
+
+            // Находим все теги <sprite>
             const sprites = stageDoc.getElementsByTagName('sprite');
+            let found = false;
             for (let sprite of sprites) {
-                let oldX = parseFloat(sprite.getAttribute('x')) || 0;
-                let oldY = parseFloat(sprite.getAttribute('y')) || 0;
-                let oldScale = parseFloat(sprite.getAttribute('scale')) || 1;
+                const spriteAttr = sprite.getAttribute('sprite');
+                if (spriteAttr === spriteName) {
+                    // Нашли нужный спрайт – меняем у него scale, x, y
+                    let oldX = parseFloat(sprite.getAttribute('x')) || 0;
+                    let oldY = parseFloat(sprite.getAttribute('y')) || 0;
+                    let oldScale = parseFloat(sprite.getAttribute('scale')) || 1;
 
-                const newScale = oldScale / scale;
-                const dx = (origWidth * (1 - scale)) / 2;
-                const dy = (origHeight * (1 - scale)) / 2;
-                const newX = oldX + dx;
-                const newY = oldY + dy;
+                    const newScale = oldScale / scale;
+                    const dx = (origWidth * (1 - scale)) / 2;
+                    const dy = (origHeight * (1 - scale)) / 2;
+                    const newX = oldX + dx;
+                    const newY = oldY + dy;
 
-                sprite.setAttribute('scale', (Math.round(newScale * 1000) / 1000).toString());
-                sprite.setAttribute('x', (Math.round(newX * 1000) / 1000).toString());
-                sprite.setAttribute('y', (Math.round(newY * 1000) / 1000).toString());
+                    sprite.setAttribute('scale', (Math.round(newScale * 1000) / 1000).toString());
+                    sprite.setAttribute('x', (Math.round(newX * 1000) / 1000).toString());
+                    sprite.setAttribute('y', (Math.round(newY * 1000) / 1000).toString());
 
-                log.innerText += `  - Спрайт "${sprite.getAttribute('name')}": x=${newX.toFixed(2)}, y=${newY.toFixed(2)}, scale=${newScale.toFixed(3)}\n`;
+                    log.innerText += `  ✅ Спрайт "${spriteName}" обновлён: x=${newX.toFixed(2)}, y=${newY.toFixed(2)}, scale=${newScale.toFixed(3)}\n`;
+                    found = true;
+                    break; // выходим, так как нашли нужный
+                }
             }
 
-            // Если нужно, обрабатываем и другие теги (girlfriend, boyfriend, dad) – но пока только sprite
+            if (!found) {
+                log.innerText += `  ⚠️ Спрайт с именем "${spriteName}" не найден в файле сцены. Ничего не изменено.\n`;
+            }
+
+            // Сохраняем stage файл в папку "stage data"
             const stageName = stageFile.name;
             zip.folder("stage data").file(stageName, new XMLSerializer().serializeToString(stageDoc));
             log.innerText += `✅ Конфигурация сцены сохранена в stage data/\n`;
