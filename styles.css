@@ -211,16 +211,11 @@ details.char-details .char-content {
 * { 
     box-sizing: border-box; 
     font-family: 'PhantomFont', sans-serif;
-    
-    /* ⚡ ВКЛЮЧАЕМ ЧЕТКИЙ ПИКСЕЛЬНЫЙ РЕНДЕРИНГ */
-    -webkit-font-smoothing: none;
-    -moz-osx-font-smoothing: unset;
-    text-rendering: pixelated;
 }
 
 body, input, button, select, textarea, input[type="file"]::file-selector-button {
     font-family: 'PhantomFont', sans-serif;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.5px;
 }
 
 h2 {
