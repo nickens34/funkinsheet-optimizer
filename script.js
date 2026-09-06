@@ -360,7 +360,23 @@ async function processFiles() {
     const downloadName = customName ? `${customName}_FunkinSheet.zip` : `${baseName}_Optimized.zip`;
     a.download = downloadName;
     a.click();
-    log.innerText += "Готово! Архив скачан.";
+    log.innerText += "Готово! Архив скачан.\n";
+
+    // Сброс полей ввода файлов и превью
+    const fileInputs = ['pngInput', 'xmlInput', 'jsonAtlasInput', 'jsonAnimInput', 'charDataInput', 'stageDataInput'];
+    for (const id of fileInputs) {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    }
+    // Сброс превью PNG
+    const pngPreview = document.getElementById('pngPreview');
+    pngPreview.style.display = 'none';
+    document.getElementById('pngImgPreview').src = '';
+    document.getElementById('pngInfo').innerHTML = '';
+    // Сброс превью данных (общего)
+    const dataPreview = document.getElementById('dataPreview');
+    dataPreview.style.display = 'none';
+    document.getElementById('dataInfo').innerHTML = '';
 }
 
 function isFrameEqual(f1, f2) {

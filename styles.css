@@ -37,21 +37,21 @@ button:hover { background: #0d5a7e; }
 .top-tabs {
     display: flex;
     gap: 6px;
-    margin-bottom: 14px;
-    background: #1a1a1a;
+    margin-bottom: 9px;
+    background: #1a1a1a98;
     padding: 6px;
     border-radius: 10px;
 }
 .top-tab-btn {
     flex: 1;
-    padding: 8px 10px;
+    padding: 4px 10px;
     background: transparent;
     color: #888;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 0.85em;
+    font-size: 0.75em;
     transition: all 0.2s ease;
     text-align: center;
     white-space: nowrap;
@@ -188,4 +188,42 @@ details.char-details .char-content {
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid #2a2a2a;
+}
+
+/* fontss */
+/* Special thanks: https://gamebanana.com/tools/19938 */
+
+@font-face {
+    font-family: 'DifficultyFont';
+    src: url('fonts/difficultyFont.ttf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'PhantomFont';
+    src: url('fonts/PhantomMuff_RUS.ttf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Применяем ко всем элементам */
+* { 
+    box-sizing: border-box; 
+    font-family: 'PhantomFont', sans-serif;
+    
+    /* ⚡ ВКЛЮЧАЕМ ЧЕТКИЙ ПИКСЕЛЬНЫЙ РЕНДЕРИНГ */
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
+    text-rendering: pixelated;
+}
+
+body, input, button, select, textarea, input[type="file"]::file-selector-button {
+    font-family: 'PhantomFont', sans-serif;
+    letter-spacing: 0.2px;
+}
+
+h2 {
+    font-family: 'DifficultyFont', sans-serif;
+    letter-spacing: 1px;
 }
