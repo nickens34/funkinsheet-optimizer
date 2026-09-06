@@ -225,5 +225,5 @@ body, input, button, select, textarea, input[type="file"]::file-selector-button 
 
 h2 {
     font-family: 'DifficultyFont', sans-serif;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
