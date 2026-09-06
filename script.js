@@ -3,11 +3,9 @@ let currentSubMode = 'xml';
 
 function setTopMode(mode) {
     currentTopMode = mode;
-    // Обновить верхние кнопки
     document.querySelectorAll('.top-tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('top-' + mode).classList.add('active');
 
-    // Показать нужные подвкладки
     const subTabs = document.getElementById('subTabs');
     const allSubBtns = subTabs.querySelectorAll('.tab-btn');
     allSubBtns.forEach(btn => btn.style.display = 'none');
@@ -56,15 +54,12 @@ function setSubMode(mode) {
 }
 
 function updateExperimentalVisibility() {
-    // Character experimental – только если top=character и sub=xml
     const showChar = (currentTopMode === 'character' && currentSubMode === 'xml');
     document.getElementById('character-data-container').style.display = showChar ? 'block' : 'none';
 
-    // Stage experimental – если top=stage и (sub=xml ИЛИ sub=sprite)
     const showStage = (currentTopMode === 'stage' && (currentSubMode === 'xml' || currentSubMode === 'sprite'));
     document.getElementById('stage-data-container').style.display = showStage ? 'block' : 'none';
 
-    // Если Sprite выбран, скрываем оба experimental (кроме stage, если он разрешён)
     if (currentSubMode === 'sprite' && currentTopMode !== 'stage') {
         document.getElementById('character-data-container').style.display = 'none';
         document.getElementById('stage-data-container').style.display = 'none';
@@ -129,7 +124,7 @@ async function processFiles() {
     const customName = document.getElementById('nameInput').value.trim();
     const zip = new JSZip();
 
-    // Базовое имя
+    // Базовое имя (новое имя для файлов, если задано)
     let baseName = customName;
     if (!baseName) {
         if (currentSubMode === 'xml' && document.getElementById('xmlInput').files[0]) {
@@ -279,9 +274,15 @@ async function processFiles() {
                         const oldY = parseFloat(char.getAttribute('y'));
                         char.setAttribute('y', (Math.round((oldY + dy) * 1000) / 1000).toString());
                     }
+
+                    // Если задано новое имя – обновляем атрибут sprite
+                    if (customName && char.hasAttribute('sprite')) {
+                        char.setAttribute('sprite', baseName);
+                    }
                 }
 
                 newCharData = new XMLSerializer().serializeToString(xmlDoc);
+                newCharData = newCharData.replace(/(<!DOCTYPE[^>]*>)/, '$1\n');
             } else {
                 log.innerText += `⚠️ Внимание: Движок "${engine}" пока не поддерживается для character.\n`;
                 newCharData = charText;
@@ -307,18 +308,15 @@ async function processFiles() {
             const parser = new DOMParser();
             const stageDoc = parser.parseFromString(stageText, "text/xml");
 
-            // Определяем имя спрайта для поиска – это имя PNG без расширения
-            // Используем pngBaseName, который мы сохранили ранее (оригинальное имя PNG)
-            const spriteName = pngBaseName; // например, "tiles"
+            // Ищем спрайт по оригинальному имени PNG (до переименования)
+            const spriteName = pngBaseName;
             log.innerText += `  - Ищем спрайт с именем "${spriteName}"...\n`;
 
-            // Находим все теги <sprite>
             const sprites = stageDoc.getElementsByTagName('sprite');
             let found = false;
             for (let sprite of sprites) {
                 const spriteAttr = sprite.getAttribute('sprite');
                 if (spriteAttr === spriteName) {
-                    // Нашли нужный спрайт – меняем у него scale, x, y
                     let oldX = parseFloat(sprite.getAttribute('x')) || 0;
                     let oldY = parseFloat(sprite.getAttribute('y')) || 0;
                     let oldScale = parseFloat(sprite.getAttribute('scale')) || 1;
@@ -333,9 +331,17 @@ async function processFiles() {
                     sprite.setAttribute('x', (Math.round(newX * 1000) / 1000).toString());
                     sprite.setAttribute('y', (Math.round(newY * 1000) / 1000).toString());
 
+                    // Если задано новое имя – обновляем атрибут sprite
+                    if (customName) {
+                        sprite.setAttribute('sprite', baseName);
+                    }
+
                     log.innerText += `  ✅ Спрайт "${spriteName}" обновлён: x=${newX.toFixed(2)}, y=${newY.toFixed(2)}, scale=${newScale.toFixed(3)}\n`;
+                    if (customName) {
+                        log.innerText += `     Атрибут sprite изменён на "${baseName}"\n`;
+                    }
                     found = true;
-                    break; // выходим, так как нашли нужный
+                    break;
                 }
             }
 
@@ -343,9 +349,10 @@ async function processFiles() {
                 log.innerText += `  ⚠️ Спрайт с именем "${spriteName}" не найден в файле сцены. Ничего не изменено.\n`;
             }
 
-            // Сохраняем stage файл в папку "stage data"
             const stageName = stageFile.name;
-            zip.folder("stage data").file(stageName, new XMLSerializer().serializeToString(stageDoc));
+            let stageXml = new XMLSerializer().serializeToString(stageDoc);
+            stageXml = stageXml.replace(/(<!DOCTYPE[^>]*>)/, '$1\n');
+            zip.folder("stage data").file(stageName, stageXml);
             log.innerText += `✅ Конфигурация сцены сохранена в stage data/\n`;
         } catch (e) {
             log.innerText += `❌ Ошибка обработки файла сцены: ${e.message}\n`;
@@ -368,12 +375,10 @@ async function processFiles() {
         const el = document.getElementById(id);
         if (el) el.value = '';
     }
-    // Сброс превью PNG
     const pngPreview = document.getElementById('pngPreview');
     pngPreview.style.display = 'none';
     document.getElementById('pngImgPreview').src = '';
     document.getElementById('pngInfo').innerHTML = '';
-    // Сброс превью данных (общего)
     const dataPreview = document.getElementById('dataPreview');
     dataPreview.style.display = 'none';
     document.getElementById('dataInfo').innerHTML = '';

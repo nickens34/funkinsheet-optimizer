@@ -218,6 +218,11 @@ body, input, button, select, textarea, input[type="file"]::file-selector-button 
     letter-spacing: 0.5px;
 }
 
+label {
+    font-weight: normal;
+    font-style:initial;
+}
+
 h2 {
     font-family: 'DifficultyFont', sans-serif;
     letter-spacing: 2px;
