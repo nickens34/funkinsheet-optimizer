@@ -15,11 +15,11 @@ FunkinSheet Optimizer - это универсальный инструмент �
 
 ## Ссылки
 
-### Нашли ошибки, баги или уязвимости? [ПИШИТЕ СЮДА](https://github.com/nickens34/funkinsheet-optimizer/issues)
+### ⚠️ Нашли ошибки, баги или уязвимости? [ПИШИТЕ СЮДА](https://github.com/nickens34/funkinsheet-optimizer/issues)
 
-### Хотите предложить что-то добавить? [ПИШИТЕ СЮДА](https://github.com/nickens34/funkinsheet-optimizer/discussions)
+### ✅ Хотите предложить что-то добавить? [ПИШИТЕ СЮДА](https://github.com/nickens34/funkinsheet-optimizer/discussions)
 
-### 💡 [--> ПЕРЕЙТИ НА САЙТ <--](https://nickens34.github.io/funkinsheet-optimizer/)
+### [--> ПЕРЕЙТИ НА САЙТ <--](https://nickens34.github.io/funkinsheet-optimizer/)
 
 ## ❓ Q & A
 
