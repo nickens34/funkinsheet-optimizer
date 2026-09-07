@@ -18,9 +18,9 @@ FunkinSheet Optimizer - это универсальный инструмент �
 
 ## Ссылки
 
-### 🎯 Нашли ошибки, баги или уязвимости? [ПИШИТЕ СЮДА](https://github.com/nickens34/funkinsheet-optimizer/issues)
+🎯 Нашли ошибки, баги или уязвимости? [ПИШИТЕ СЮДА](https://github.com/nickens34/funkinsheet-optimizer/issues)
 
-### ✅ Хотите предложить добавить что-то новое? [ПИШИТЕ СЮДА](https://github.com/nickens34/funkinsheet-optimizer/discussions)
+✅ Хотите предложить добавить что-то новое? [ПИШИТЕ СЮДА](https://github.com/nickens34/funkinsheet-optimizer/discussions)
 
 
 
