@@ -19,7 +19,7 @@ FunkinSheet Optimizer - это универсальный инструмент �
 
 ### ✅ Хотите предложить что-то добавить? [ПИШИТЕ СЮДА](https://github.com/nickens34/funkinsheet-optimizer/discussions)
 
-### [--> ПЕРЕЙТИ НА САЙТ <--](https://nickens34.github.io/funkinsheet-optimizer/)
+[--> ПЕРЕЙТИ НА САЙТ <--](https://nickens34.github.io/funkinsheet-optimizer/)
 
 ## ❓ Q & A
 
