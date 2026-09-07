@@ -13,6 +13,12 @@ FunkinSheet Optimizer - это универсальный инструмент �
 - SpriteSheet - Классический вид для отображения анимаций. Преднозначен для работы с PNG + XML
 - SpriteMap - Более новая разновидность показа объектов путём размещения их частями и слоями в строго нужных позициях. Преднозначен для работы с PNG + JSON(spritemap) + JSON(Animation)
 
+## Ссылки
+
+### Нашли ошибки, баги или уязвимости? [ПИШИТЕ СЮДА](https://github.com/nickens34/funkinsheet-optimizer/issues)
+
+### Хотите предложить что-то добавить? [ПИШИТЕ СЮДА](https://github.com/nickens34/funkinsheet-optimizer/discussions)
+
 ### 💡 [--> ПЕРЕЙТИ НА САЙТ <--](https://nickens34.github.io/funkinsheet-optimizer/)
 
 ## ❓ Q & A
