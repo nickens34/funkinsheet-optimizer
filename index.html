@@ -17,8 +17,8 @@
     <!-- Верхние вкладки -->
     <div class="top-tabs">
         <button id="top-all" class="top-tab-btn active" onclick="setTopMode('all')">⭐ All Sprites</button>
-        <button id="top-character" class="top-tab-btn beta" onclick="setTopMode('character')">🧪 Characters [Beta]</button>
-        <button id="top-stage" class="top-tab-btn beta" onclick="setTopMode('stage')">🧪 Stages [Beta]</button>
+        <button id="top-character" class="top-tab-btn beta" onclick="setTopMode('character')">👾 Characters [Beta]</button>
+        <button id="top-stage" class="top-tab-btn beta" onclick="setTopMode('stage')">🌆 Stages [Beta]</button>
     </div>
 
     <!-- Нижние подвкладки (контейнер) -->
@@ -65,8 +65,8 @@
                 </span>
             </summary>
             <div class="char-content">
-                <label style="margin-top: 0;">Файл character'a (.json / .xml):</label>
-                <input type="file" id="charDataInput" accept=".xml,.json" onchange="previewDataFile('charData')">
+                <label style="margin-top: 0;">Файл character'a (.xml):</label> <!-- .json / .xml -->
+                <input type="file" id="charDataInput" accept=".xml" onchange="previewDataFile('charData')"> <!-- .xml,.json -->
                 
                 <label>Движок (формат масштабирования):</label>
                 <select id="engineSelectChar">
