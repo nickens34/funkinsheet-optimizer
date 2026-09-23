@@ -227,3 +227,24 @@ h2 {
     font-family: 'DifficultyFont', sans-serif;
     letter-spacing: 2px;
 }
+
+/* beta */
+/* Перенос [Beta] на новую строку на узких экранах */
+.beta-tag {
+    display: inline;
+}
+
+@media (max-width: 520px) {
+    .top-tab-btn {
+        white-space: normal;       /* разрешаем перенос строк */
+        line-height: 1.15;
+        padding: 6px 8px;
+        font-size: 0.7em;
+    }
+    .beta-tag {
+        display: block;            /* [Beta] уезжает на новую строку */
+        font-size: 0.9em;
+        opacity: 0.85;
+        margin-top: 1px;
+    }
+}
