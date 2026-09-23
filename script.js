@@ -111,7 +111,38 @@ async function previewDataFile(type) {
 }
 
 async function processFiles() {
+    //...
     const pngFile = document.getElementById('pngInput').files[0];
+
+    // Проверка расширений
+    const pngExt = pngFile.name.split('.').pop().toLowerCase();
+    if (pngExt !== 'png') return alert('Файл должен быть в формате PNG!');
+
+    if (currentSubMode === 'xml') {
+        const xmlFile = document.getElementById('xmlInput').files[0];
+        if (!xmlFile) return alert('Выберите XML файл!');
+        if (!xmlFile.name.toLowerCase().endsWith('.xml')) return alert('Файл разметки должен быть в формате XML!');
+    }
+
+    if (currentSubMode === 'json') {
+        const atlasFile = document.getElementById('jsonAtlasInput').files[0];
+        const animFile = document.getElementById('jsonAnimInput').files[0];
+        if (!atlasFile || !animFile) return alert('Выберите оба JSON файла!');
+        if (!atlasFile.name.toLowerCase().endsWith('.json') || !animFile.name.toLowerCase().endsWith('.json'))
+            return alert('Оба файла должны быть в формате JSON!');
+    }
+
+    if (currentTopMode === 'character') {
+        const f = document.getElementById('charDataInput').files[0];
+        if (f && !f.name.toLowerCase().endsWith('.xml')) return alert('Файл character должен быть .xml');
+    }
+
+    if (currentTopMode === 'stage') {
+        const f = document.getElementById('stageDataInput').files[0];
+        if (f && !f.name.toLowerCase().endsWith('.xml')) return alert('Файл stage должен быть .xml');
+    }
+
+    //...
     const pngBaseName = pngFile.name.replace(/\.[^/.]+$/, "");
     const scaleRaw = document.getElementById('scaleInput').value.replace(',', '.');
     const scale = parseFloat(scaleRaw);

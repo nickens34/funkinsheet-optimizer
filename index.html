@@ -32,7 +32,7 @@
 
     <div class="box">
         <label id="first-label">1. PNG файл:</label>
-        <input type="file" id="pngInput" accept="image/png" onchange="previewPng()">
+        <input type="file" id="pngInput" onchange="previewPng()">
         <div id="pngPreview" class="preview-box">
             <img id="pngImgPreview" src="" alt="PNG Preview">
             <div class="file-info" id="pngInfo"></div>
@@ -40,15 +40,15 @@
 
         <div id="xml-container">
             <label>2. XML файл:</label>
-            <input type="file" id="xmlInput" accept=".xml" onchange="previewDataFile('xml')">
+            <input type="file" id="xmlInput" onchange="previewDataFile('xml')">
         </div>
 
         <div id="json-container" style="display: none;">
             <label>2. Атлас (spritemap.json):</label>
-            <input type="file" id="jsonAtlasInput" accept=".json">
+            <input type="file" id="jsonAtlasInput">
             
             <label>3. Анимация (Animation.json):</label>
-            <input type="file" id="jsonAnimInput" accept=".json">
+            <input type="file" id="jsonAnimInput">
         </div>
 
         <div id="dataPreview" class="preview-box">
@@ -66,7 +66,7 @@
             </summary>
             <div class="char-content">
                 <label style="margin-top: 0;">Файл character'a (.xml):</label> <!-- .json / .xml -->
-                <input type="file" id="charDataInput" accept=".xml" onchange="previewDataFile('charData')"> <!-- .xml,.json -->
+                <input type="file" id="charDataInput" onchange="previewDataFile('charData')"> <!-- .xml,.json -->
                 
                 <label>Движок (формат масштабирования):</label>
                 <select id="engineSelectChar">
@@ -88,7 +88,7 @@
             </summary>
             <div class="char-content">
                 <label style="margin-top: 0;">Файл stage (.xml):</label>
-                <input type="file" id="stageDataInput" accept=".xml" onchange="previewDataFile('stageData')">
+                <input type="file" id="stageDataInput" onchange="previewDataFile('stageData')">
                 
                 <label>Движок (формат масштабирования):</label>
                 <select id="engineSelectStage">
