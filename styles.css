@@ -254,3 +254,17 @@ h2 {
         font-size: 1.3em;
     }
 }
+
+/* visits */
+.visit-counter {
+    text-align: center;
+    font-size: 0.8em;
+    color: #6bc9c9;
+    margin-top: 12px;
+    opacity: 0.85;
+    letter-spacing: 0.5px;
+}
+.visit-counter span {
+    font-weight: bold;
+    color: #fff;
+}

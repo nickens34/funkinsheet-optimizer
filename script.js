@@ -424,7 +424,44 @@ function isFrameEqual(f1, f2) {
     return sameSymbol && sameTRP;
 }
 
+//onload
 window.onload = function() {
     setTopMode('all');
     setSubMode('xml');
+    initVisitCounter();
 };
+
+// visits
+async function initVisitCounter() {
+    const container = document.getElementById('visitCounter');
+    if (!container) return;
+
+    const badgeUrl = 'https://api.visitorbadge.io/api/visitors?path=nickens-funkinsheet&label=👁️%20Visits&countColor=%230e7f83&labelColor=%231a1a1a&style=flat';
+
+    // Уже считали в этой сессии — показываем сохранённое число, картинку НЕ грузим
+    if (sessionStorage.getItem('visit_counted')) {
+        const saved = sessionStorage.getItem('visit_count');
+        if (saved) {
+            container.innerHTML = `👁️ Visits: <span>${saved}</span>`;
+        }
+        return;
+    }
+
+    // Первый заход в сессии — грузим SVG, вытаскиваем число, сохраняем
+    try {
+        const res = await fetch(badgeUrl);
+        const svg = await res.text();
+
+        // Вытаскиваем все числа из SVG и берём наибольшее (это и есть счётчик)
+        const matches = svg.match(/>\s*(\d+)\s*</g) || [];
+        const nums = matches.map(m => parseInt(m.replace(/[><\s]/g, ''), 10));
+        const count = nums.length ? Math.max(...nums) : '—';
+
+        sessionStorage.setItem('visit_counted', '1');
+        sessionStorage.setItem('visit_count', count);
+        container.innerHTML = `👁️ Visits: <span>${count}</span>`;
+    } catch (e) {
+        // При ошибке — ничего не показываем, счётчик не трогаем
+        container.innerHTML = '';
+    }
+}
