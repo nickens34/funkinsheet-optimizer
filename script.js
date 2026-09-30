@@ -134,12 +134,22 @@ async function processFiles() {
 
     if (currentTopMode === 'character') {
         const f = document.getElementById('charDataInput').files[0];
-        if (f && !f.name.toLowerCase().endsWith('.xml')) return alert('Файл character должен быть .xml');
+        if (f) {
+            const ext = f.name.split('.').pop().toLowerCase();
+            const engineCheckChar = document.getElementById('engineSelectChar').value;
+            if (engineCheckChar === 'codename' && ext !== 'xml') return alert('Для Codename Engine нужен .xml');
+            if ((engineCheckChar === 'psych' || engineCheckChar === 'vslice') && ext !== 'json') return alert('Для этого движка нужен .json');
+        }
     }
 
     if (currentTopMode === 'stage') {
         const f = document.getElementById('stageDataInput').files[0];
-        if (f && !f.name.toLowerCase().endsWith('.xml')) return alert('Файл stage должен быть .xml');
+        const stageEngineCheck = document.getElementById('engineSelectStage').value;
+        if (f) {
+            const ext = f.name.split('.').pop().toLowerCase();
+            if (stageEngineCheck === 'codename' && ext !== 'xml') return alert('Для Codename Engine нужен .xml');
+            if (stageEngineCheck === 'vslice' && ext !== 'json') return alert('Для V-Slice Engine нужен .json');
+        }
     }
 
     //...
@@ -232,7 +242,7 @@ async function processFiles() {
         // Для краткости опускаем, он не изменился
     }
 
-    // --- ОБРАБОТКА CHARACTER (если выбран character и подрежим xml) ---
+    // --- ОБРАБОТКА CHARACTER ---
     if (currentTopMode === 'character' && currentSubMode === 'xml') {
         const charDataFile = document.getElementById('charDataInput').files[0];
         if (!charDataFile) {
@@ -247,6 +257,7 @@ async function processFiles() {
             const charExt = charDataFile.name.split('.').pop().toLowerCase();
             const charName = charDataFile.name;
 
+            // --- CHARACTER CNE ---
             if (engine === 'codename' && charExt === 'xml') {
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(charText, "text/xml");
@@ -260,7 +271,7 @@ async function processFiles() {
                 const atlasDoc = parser.parseFromString(mainXmlText, 'text/xml');
                 const subTextures = [...atlasDoc.getElementsByTagName('SubTexture')];
 
-                // Вычисляем среднюю ширину и высоту по всем кадрам
+                // Вычисление средней ширины и высоты по всем кадрам
                 let totalWidth = 0, totalHeight = 0, count = 0;
                 for (const frame of subTextures) {
                     const w = parseFloat(frame.getAttribute('frameWidth') || frame.getAttribute('width') || 0);
@@ -288,7 +299,7 @@ async function processFiles() {
                     }
                 }
 
-                // Обрабатываем <character>
+                // Обрабатка <character>
                 for (const char of xmlDoc.getElementsByTagName('character')) {
                     const oldScale = char.hasAttribute('scale') ? parseFloat(char.getAttribute('scale')) : 1;
                     const newScale = oldScale / scale;
@@ -314,7 +325,78 @@ async function processFiles() {
 
                 newCharData = new XMLSerializer().serializeToString(xmlDoc);
                 newCharData = newCharData.replace(/(<!DOCTYPE[^>]*>)/, '$1\n');
-            } else {
+            } 
+
+
+            // --- CHARACTER V-SLICE ENGINE ---
+            else if (engine === 'vslice' && charExt === 'json') {
+                let data = JSON.parse(charText);
+
+                // 1. Компенсация scale (даже если поля не было — добавляем)
+                const oldScale = (data.scale !== undefined) ? data.scale : 1;
+                data.scale = Math.round((oldScale / scale) * 100000) / 100000;
+
+                // 2. Компенсация глобального offsets
+                if (data.offsets && Array.isArray(data.offsets)) {
+                    data.offsets[0] = Math.round(data.offsets[0] * scale * 1000) / 1000;
+                    data.offsets[1] = Math.round(data.offsets[1] * scale * 1000) / 1000;
+                }
+
+                // 3. Компенсация cameraOffsets
+                if (data.cameraOffsets && Array.isArray(data.cameraOffsets)) {
+                    data.cameraOffsets[0] = Math.round(data.cameraOffsets[0] * scale * 1000) / 1000;
+                    data.cameraOffsets[1] = Math.round(data.cameraOffsets[1] * scale * 1000) / 1000;
+                }
+
+                // 4. Компенсация offsets в каждой анимации
+                if (data.animations && Array.isArray(data.animations)) {
+                    data.animations.forEach(anim => {
+                        if (anim.offsets && Array.isArray(anim.offsets)) {
+                            anim.offsets[0] = Math.round(anim.offsets[0] * scale * 1000) / 1000;
+                            anim.offsets[1] = Math.round(anim.offsets[1] * scale * 1000) / 1000;
+                        }
+                    });
+                }
+
+                // 5. Обновляем assetPath при переименовании (последний сегмент пути)
+                if (customName && data.assetPath) {
+                    const parts = data.assetPath.split('/');
+                    parts[parts.length - 1] = baseName;
+                    data.assetPath = parts.join('/');
+                }
+
+                newCharData = JSON.stringify(data, null, 2);
+            }
+
+            
+            // --- CHARACTER PSYCH ENGINE ---
+            else if (engine === 'psych' && charExt === 'json') {
+                let data = JSON.parse(charText);
+
+                // 1. Компенсация scale персонажа
+                if (data.scale !== undefined) {
+                    data.scale = Math.round((data.scale / scale) * 100000) / 100000;
+                }
+
+                // 2. Компенсация offsets в каждой анимации
+                if (data.animations && Array.isArray(data.animations)) {
+                    data.animations.forEach(anim => {
+                        if (anim.offsets && Array.isArray(anim.offsets)) {
+                            anim.offsets[0] = Math.round(anim.offsets[0] * scale * 1000) / 1000;
+                            anim.offsets[1] = Math.round(anim.offsets[1] * scale * 1000) / 1000;
+                        }
+                    });
+                }
+
+                // 4. Обновляем image (имя PNG) если задано новое имя
+                if (customName && data.image) {
+                    data.image = `characters/${baseName}`;
+                }
+
+                newCharData = JSON.stringify(data, null, '\t'); // Формат как в bf.json
+            }
+            
+            else {
                 log.innerText += `⚠️ Внимание: Движок "${engine}" пока не поддерживается для character.\n`;
                 newCharData = charText;
             }
@@ -333,13 +415,57 @@ async function processFiles() {
             alert('В режиме Stages[Beta] требуется файл data/stage!');
             return;
         }
-        log.innerText += `Обработка файла сцены (stage)...\n`;
+        const stageEngine = document.getElementById('engineSelectStage').value;
+        log.innerText += `Обработка файла сцены (${stageEngine})...\n`;
         try {
-            const stageText = await stageFile.text();
-            const parser = new DOMParser();
-            const stageDoc = parser.parseFromString(stageText, "text/xml");
+            // ===== V-SLICE ENGINE (JSON) =====
+            if (stageEngine === 'vslice') {
+                const stageText = await stageFile.text();
+                const stageData = JSON.parse(stageText);
 
-            // Ищем спрайт по оригинальному имени PNG (до переименования)
+                const spriteName = pngBaseName;
+                log.innerText += `  - Ищем prop с assetPath, соответствующим "${spriteName}"...\n`;
+
+                let found = false;
+                if (stageData.props && Array.isArray(stageData.props)) {
+                    for (const prop of stageData.props) {
+                        if (!prop.assetPath) continue;
+                        const lastPart = prop.assetPath.split('/').pop();
+                        if (lastPart === spriteName) {
+                            const oldScaleX = (prop.scale && prop.scale[0] !== undefined) ? prop.scale[0] : 1;
+                            const oldScaleY = (prop.scale && prop.scale[1] !== undefined) ? prop.scale[1] : 1;
+                            const oldX = (prop.position && prop.position[0] !== undefined) ? prop.position[0] : 0;
+                            const oldY = (prop.position && prop.position[1] !== undefined) ? prop.position[1] : 0;
+
+                            const newScaleX = oldScaleX / scale;
+                            const newScaleY = oldScaleY / scale;
+                            const dx = (origWidth * (1 - scale)) / 2;
+                            const dy = (origHeight * (1 - scale)) / 2;
+                            const newX = oldX + dx;
+                            const newY = oldY + dy;
+
+                            prop.scale = [Math.round(newScaleX * 1000) / 1000, Math.round(newScaleY * 1000) / 1000];
+                            prop.position = [Math.round(newX * 1000) / 1000, Math.round(newY * 1000) / 1000];
+
+                            log.innerText += `  ✅ Prop "${prop.name}": position=[${newX.toFixed(2)}, ${newY.toFixed(2)}], scale=[${newScaleX.toFixed(3)}, ${newScaleY.toFixed(3)}]\n`;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!found) log.innerText += `  ⚠️ Prop с assetPath "${spriteName}" не найден.\n`;
+
+                zip.folder("stage data").file(stageFile.name, JSON.stringify(stageData, null, 2));
+                log.innerText += `✅ V-Slice сцена сохранена в stage data/\n`;
+            }
+            // ===== CODENAME ENGINE (XML) =====
+            else {
+                const stageText = await stageFile.text();
+                const parser = new DOMParser();
+                const stageDoc = parser.parseFromString(stageText, "text/xml");
+
+            // Поиск спрайта по оригинальному имени PNG (до переименования)
             const spriteName = pngBaseName;
             log.innerText += `  - Ищем спрайт с именем "${spriteName}"...\n`;
 
@@ -385,6 +511,7 @@ async function processFiles() {
             stageXml = stageXml.replace(/(<!DOCTYPE[^>]*>)/, '$1\n');
             zip.folder("stage data").file(stageName, stageXml);
             log.innerText += `✅ Конфигурация сцены сохранена в stage data/\n`;
+            }
         } catch (e) {
             log.innerText += `❌ Ошибка обработки файла сцены: ${e.message}\n`;
         }
@@ -442,7 +569,7 @@ async function initVisitCounter() {
     if (sessionStorage.getItem('visit_counted')) {
         const saved = sessionStorage.getItem('visit_count');
         if (saved) {
-            container.innerHTML = `👁️ Visits: <span>${saved}</span>`;
+            container.innerHTML = `<img src="icons/vitits.png" class="section-icon" alt="Icon"> Visits: <span>${saved}</span>`;
         }
         return;
     }
@@ -459,7 +586,7 @@ async function initVisitCounter() {
 
         sessionStorage.setItem('visit_counted', '1');
         sessionStorage.setItem('visit_count', count);
-        container.innerHTML = `👁️ Visits: <span>${count}</span>`;
+        container.innerHTML = `<img src="icons/vitits.png" class="section-icon" alt="Icon"> Visits: <span>${count}</span>`;
     } catch (e) {
         // При ошибке — ничего не показываем, счётчик не трогаем
         container.innerHTML = '';

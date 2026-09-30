@@ -16,9 +16,9 @@
     
     <!-- Верхние вкладки -->
     <div class="top-tabs">
-        <button id="top-all" class="top-tab-btn active" onclick="setTopMode('all')">⭐ All Sprites</button>
-        <button id="top-character" class="top-tab-btn beta" onclick="setTopMode('character')">👾 Characters <span class="beta-tag">[Beta]</span></button>
-        <button id="top-stage" class="top-tab-btn beta" onclick="setTopMode('stage')">🌆 Stages <span class="beta-tag">[Beta]</span></button>
+        <button id="top-all" class="top-tab-btn active" onclick="setTopMode('all')"><img src="icons/all.png" class="section-icon" alt="Icon"> <span class="tab-text">All Sprites</span></button>
+        <button id="top-character" class="top-tab-btn beta" onclick="setTopMode('character')"><img src="icons/characters.png" class="section-icon" alt="Icon"> <span class="tab-text">Characters</span></button>
+        <button id="top-stage" class="top-tab-btn beta" onclick="setTopMode('stage')"><img src="icons/stages.png" class="section-icon" alt="Icon"> <span class="tab-text">Stages</span></button>
     </div>
 
     <!-- Нижние подвкладки (контейнер) -->
@@ -71,6 +71,8 @@
                 <label>Движок (формат масштабирования):</label>
                 <select id="engineSelectChar">
                     <option value="codename">Codename Engine (XML)</option>
+                    <option value="vslice">V-Slice (JSON)</option>
+                    <option value="psych">Psych Engine (JSON)</option> 
                 </select>
                 <div class="hint-text" style="margin-top: 8px;">
                     💡 Файл будет сохранён в папке <b>character data</b>.
@@ -87,12 +89,14 @@
                 </span>
             </summary>
             <div class="char-content">
-                <label style="margin-top: 0;">Файл stage (.xml):</label>
+                <label style="margin-top: 0;">Файл stage (.xml / .json):</label>
                 <input type="file" id="stageDataInput" onchange="previewDataFile('stageData')">
-                
+
                 <label>Движок (формат масштабирования):</label>
                 <select id="engineSelectStage">
                     <option value="codename">Codename Engine (XML)</option>
+                    <option value="vslice">V-Slice (JSON)</option>
+                    <option value="psych" disabled>Psych Engine (Lua) — не поддерживается</option>
                 </select>
                 <div class="hint-text" style="margin-top: 8px;">
                     💡 Файл будет сохранён в папке <b>stage data</b>.
@@ -127,6 +131,7 @@
         <button onclick="processFiles()">Обработать и Скачать ZIP</button>
     </div>
     <div class="visit-counter" id="visitCounter"></div>
+    <div class="site-version">v0.7.0 · Обновлено 01.10.2026</div>
     <div id="log"></div>
 
 </body>

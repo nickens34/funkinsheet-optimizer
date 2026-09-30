@@ -46,6 +46,11 @@ button:hover { background: #0d5a7e; }
     border-radius: 10px;
 }
 .top-tab-btn {
+    display: inline-flex;      /* или flex, раз кнопки в .top-tabs */
+    align-items: center;       /* вертикальное центрирование всех детей */
+    justify-content: center;
+    gap: 6px;                  /* отступ между иконкой и текстом */
+    line-height: 1; /* ... */
     flex: 1;
     padding: 4px 10px;
     background: transparent;
@@ -231,24 +236,13 @@ h2 {
     letter-spacing: 2px;
 }
 
-/* beta */
-/* Перенос [Beta] на новую строку на узких экранах */
-.beta-tag {
-    display: inline;
-}
-
+/* Перенос строк */
 @media (max-width: 520px) {
     .top-tab-btn {
-        white-space: normal;       /* разрешаем перенос строк */
+        white-space: normal; /* разрешаем перенос строк */
         line-height: 1.15;
         padding: 6px 8px;
         font-size: 0.7em;
-    }
-    .beta-tag {
-        display: block;            /* [Beta] уезжает на новую строку */
-        font-size: 0.9em;
-        opacity: 0.85;
-        margin-top: 1px;
     }
     .headerTxt {
         font-size: 1.3em;
@@ -257,14 +251,43 @@ h2 {
 
 /* visits */
 .visit-counter {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
     text-align: center;
     font-size: 0.8em;
     color: #6bc9c9;
-    margin-top: 12px;
+    margin-top: 2px; /* 12px */
     opacity: 0.85;
     letter-spacing: 0.5px;
 }
 .visit-counter span {
     font-weight: bold;
     color: #fff;
+}
+.visit-counter img {
+    transform: translateY(-1px);
+}
+
+/* section icons и подгон координат*/
+.section-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: block;
+    object-fit: contain;
+}
+
+.top-tab-btn .tab-text {
+    transform: translateY(1px);
+}
+
+/* version */
+.site-version {
+    text-align: center;
+    font-size: 0.75em;
+    color: #666;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
 }
