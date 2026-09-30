@@ -10,7 +10,7 @@ FunkinSheet Optimizer - это универсальный инструмент �
 - Stages - работает идентично прошлому разделу, подгоняя размер и координаты в файле конфигурации
 
 <details>
-  <summary>⚠️[ВАЖНО]: Разделы CHARACTERS и STAGES работают на данный момент ТОЛЬКО для Codename Engine!</summary>
+  <summary>⚠️[ВАЖНО]: Разделы CHARACTERS и STAGES работают для Codename Engine, V-Slice и Psych Engine!</summary>
 
 ```yo
 ➥ Если стоит добавить ДОП ФИШКИ и на сторонние движки, дайте знать :)
