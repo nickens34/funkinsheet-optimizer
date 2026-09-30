@@ -373,27 +373,48 @@ async function processFiles() {
             else if (engine === 'psych' && charExt === 'json') {
                 let data = JSON.parse(charText);
 
-                // 1. Компенсация scale персонажа
+                // Компенсация scale
                 if (data.scale !== undefined) {
                     data.scale = Math.round((data.scale / scale) * 100000) / 100000;
                 }
 
-                // 2. Компенсация offsets в каждой анимации
-                if (data.animations && Array.isArray(data.animations)) {
-                    data.animations.forEach(anim => {
-                        if (anim.offsets && Array.isArray(anim.offsets)) {
-                            anim.offsets[0] = Math.round(anim.offsets[0] * scale * 1000) / 1000;
-                            anim.offsets[1] = Math.round(anim.offsets[1] * scale * 1000) / 1000;
+                // Считаем среднюю ширину/высоту кадров из SpriteSheet XML
+                const mainXmlFile = document.getElementById('xmlInput').files[0];
+                if (mainXmlFile) {
+                    const mainXmlText = await mainXmlFile.text();
+                    const parser = new DOMParser();
+                    const atlasDoc = parser.parseFromString(mainXmlText, 'text/xml');
+                    const subTextures = [...atlasDoc.getElementsByTagName('SubTexture')];
+
+                    let totalWidth = 0, totalHeight = 0, count = 0;
+                    for (const frame of subTextures) {
+                        const w = parseFloat(frame.getAttribute('frameWidth') || frame.getAttribute('width') || 0);
+                        const h = parseFloat(frame.getAttribute('frameHeight') || frame.getAttribute('height') || 0);
+                        if (w > 0 && h > 0) {
+                            totalWidth += w;
+                            totalHeight += h;
+                            count++;
                         }
-                    });
+                    }
+                    const avgWidth = count ? totalWidth / count : 0;
+                    const avgHeight = count ? totalHeight / count : 0;
+
+                    const dx = (avgWidth / 2) * (1 - scale);
+                    const dy = (avgHeight / 2) * (1 - scale);
+
+                    // Сдвигаем position персонажа (не камеру!)
+                    if (data.position && Array.isArray(data.position)) {
+                        data.position[0] = Math.round((data.position[0] + dx) * 1000) / 1000;
+                        data.position[1] = Math.round((data.position[1] + dy) * 1000) / 1000;
+                    }
                 }
 
-                // 4. Обновляем image (имя PNG) если задано новое имя
+                // Обновляем image при переименовании
                 if (customName && data.image) {
                     data.image = `characters/${baseName}`;
                 }
 
-                newCharData = JSON.stringify(data, null, '\t'); // Формат как в bf.json
+                newCharData = JSON.stringify(data, null, '\t');
             }
             
             else {
